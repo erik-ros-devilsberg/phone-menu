@@ -5,15 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Twilio\TwiML\VoiceResponse;
 use GuzzleHttp\Client;
-
+use Illuminate\Support\Facades\Log;
 
 class InboundCallController extends Controller
 {
     //
+
+
 	public function handleInbound(Request $request)
 	{
 		$response = new VoiceResponse();
-
+		/*
 		$gather = $response->gather([
 			'input' => 'speech',
 			'action' => '/api/chat',
@@ -22,6 +24,18 @@ class InboundCallController extends Controller
 		]);
 
 		$gather->say('Hello, thank you for calling CREW CRAFT. Is there anything I can help you with?');
+		*/
+
+		$response->say('Hello, thank you for calling CREW CRAFT. Is there anything I can help you with?');
+
+		$response->record([
+			'action' => 'https://phone.crew-craft.cc/api/chat', // Twilio sends recording here
+			'method' => 'POST',
+			'playBeep' => true,
+			'maxLength' => 60,
+			'timeout' => 10,
+		]);
+
 
 		return response($response, 200)
 			->header('Content-Type', 'text/xml');
@@ -57,32 +71,63 @@ class InboundCallController extends Controller
 	
 	public function chat(Request $request)
 	{
+		$recordingUrl = $request->input('RecordingUrl');
+
+		// Use Whisper to transcribe the audio
+		$transcription = $this->transcribeWithWhisper($recordingUrl);
+
+		// Once transcribed, send the text to ChatGPT
+		$responseText = $this->getAiResponse($transcription);
+	
 		$response = new VoiceResponse();
-    
-		if ($request->has('SpeechResult')) {
-			$message = $request->input('SpeechResult');
+		$response->say($responseText);
 
-			// Generate AI response using OpenAI
-			$aiResponse = $this->getAiResponse($message);
+		$response->record([
+			'action' => 'https://phone.crew-craft.cc/api/chat', // Twilio sends recording here
+			'method' => 'POST',
+			'playBeep' => true,
+			'maxLength' => 60,
+			'timeout' => 10,
+		]);
 
-			$response->say($aiResponse);
-		}
-		else
-		{
-			$response->say('I am sorry, I did not understand that. Please try again.');				
-		}
-		
-		$response->gather([
-			'input' => 'speech',
-			'action' => '/api/chat',
-			'language' => 'en-US',
-			'speechTimeout' => 'auto'
-		])->say('ok?');
 
 		return response($response, 200)
 			->header('Content-Type', 'text/xml');
-	
 	}
+	
+	private function transcribeWithWhisper($audioUrl)
+	{
+		$apiKey = env('OPENAI_API_KEY');
+		$url = "https://api.openai.com/v1/audio/transcriptions";
+		
+		$audioContent = file_get_contents($audioUrl);
+	
+		$data = [
+			'file' => $audioContent,
+			'model' => 'whisper-1', // or whatever version is current
+		];
+	
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, [
+			'Content-Type: multipart/form-data',
+			'Authorization: Bearer ' . $apiKey,
+		]);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+	
+		$response = curl_exec($ch);
+		curl_close($ch);
+	
+		$decodedResponse = json_decode($response, true);
+
+		Log::error('transcription result', [
+			'transcription' => $decodedResponse,
+		]);
+
+		return $decodedResponse['text'];
+	}
+		
 
 	public function ask(Request $request)
 	{
