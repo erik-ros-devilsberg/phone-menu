@@ -69,6 +69,14 @@ class InboundCallController extends Controller
 		return $result['choices'][0]['message']['content'];
 	}
 	
+	public function sendError($message){
+		$response = new VoiceResponse();
+		$response->say($message);
+		$response->hangup();
+		return response($response, 200)
+			->header('Content-Type', 'text/xml');
+	}
+
 	public function chat(Request $request)
 	{
 		$recordingUrl = $request->input('RecordingUrl');
@@ -76,11 +84,17 @@ class InboundCallController extends Controller
 		// Use Whisper to transcribe the audio
 		$transcription = $this->transcribeWithWhisper($recordingUrl);
 
+		if ($transcription == 'Failed to transcribe audio' || $transcription == 'Failed to fetch audio content') {
+			$this->sendError($transcription);
+		}
+
 		// Once transcribed, send the text to ChatGPT
 		$responseText = $this->getAiResponse($transcription);
-	
+
 		$response = new VoiceResponse();
 		$response->say($responseText);
+		$response->hangup();
+
 
 /*		
 		$response->record([
