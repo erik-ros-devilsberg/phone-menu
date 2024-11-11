@@ -216,6 +216,10 @@ class InboundCallController extends Controller
 		$client = new Client();
 		$apiKey = env('OPENAI_API_KEY');
 
+		if ($apiKey == '') {
+			return response()->json(['error' => 'API key not set']);
+		}
+
 		$response = $client->post('https://api.openai.com/v1/chat/completions', [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $apiKey,
