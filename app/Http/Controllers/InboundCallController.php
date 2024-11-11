@@ -82,6 +82,7 @@ class InboundCallController extends Controller
 		$response = new VoiceResponse();
 		$response->say($responseText);
 
+/*		
 		$response->record([
 			'action' => 'https://phone.crew-craft.cc/api/chat', // Twilio sends recording here
 			'method' => 'POST',
@@ -89,7 +90,7 @@ class InboundCallController extends Controller
 			'maxLength' => 60,
 			'timeout' => 10,
 		]);
-
+*/
 
 		return response($response, 200)
 			->header('Content-Type', 'text/xml');
@@ -106,7 +107,7 @@ class InboundCallController extends Controller
 			Log::error('Failed to fetch audio content', [
 				'error' => $e->getMessage(),
 			]);
-			return '';
+			return 'Failed to fetch audio content';
 		}
 	
 		$data = [
@@ -130,7 +131,7 @@ class InboundCallController extends Controller
 			Log::error('Failed to transcribe audio', [
 				'error' => $e->getMessage(),
 			]);
-			return '';
+			return 'Failed to transcribe audio';
 		}
 	
 		$decodedResponse = json_decode($response, true);
