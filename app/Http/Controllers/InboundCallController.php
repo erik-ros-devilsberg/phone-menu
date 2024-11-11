@@ -79,7 +79,19 @@ class InboundCallController extends Controller
 
 	public function chat(Request $request)
 	{
-		$recordingUrl = $request->input('RecordingUrl');
+		if ($request->has('RecordingUrl')) {
+			$recordingUrl = $request->input('RecordingUrl');
+		}
+		else {
+			$recordingUrl = 'No recording found';
+		}
+
+		// Once transcribed, send the text to ChatGPT
+		$responseText = $this->getAiResponse('success!: ' . $recordingUrl);
+
+		$response = new VoiceResponse();
+		$response->say($responseText);
+		$response->hangup();
 
 		// Use Whisper to transcribe the audio
 		$transcription = $this->transcribeWithWhisper($recordingUrl);
