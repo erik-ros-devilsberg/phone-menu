@@ -6,6 +6,9 @@ use App\Http\Controllers\FailedCallController;
 
 Route::post('/inbound', [InboundCallController::class, 'handleInbound']);
 Route::post('/fail', [FailedCallController::class, 'handleFail']);
+Route::post('/chat', [InboundCallController::class, 'chat']);
+Route::post('/ask', [InboundCallController::class, 'ask']);
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
