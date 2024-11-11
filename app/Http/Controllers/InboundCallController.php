@@ -14,14 +14,14 @@ class InboundCallController extends Controller
 	{
 		$response = new VoiceResponse();
 
-		$response->gather([
+		$gather = $response->gather([
 			'input' => 'speech',
 			'action' => '/api/chat',
 			'language' => 'en-US',
 			'speechTimeout' => 'auto'
 		]);
 
-		$response->say('Hello, thank you for calling CREW CRAFT. You are loved. My name is Alice. Is there anything I can help you with?');
+		$gather->say('Hello, thank you for calling CREW CRAFT. Is there anything I can help you with?');
 
 		return response($response, 200)
 			->header('Content-Type', 'text/xml');
@@ -77,7 +77,7 @@ class InboundCallController extends Controller
 			'action' => '/api/chat',
 			'language' => 'en-US',
 			'speechTimeout' => 'auto'
-		]);
+		])->say('ok?');
 
 		return response($response, 200)
 			->header('Content-Type', 'text/xml');
