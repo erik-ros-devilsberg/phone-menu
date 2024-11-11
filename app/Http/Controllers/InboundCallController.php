@@ -93,6 +93,7 @@ class InboundCallController extends Controller
 		$response->say($responseText);
 		$response->hangup();
 
+/*		
 		// Use Whisper to transcribe the audio
 		$transcription = $this->transcribeWithWhisper($recordingUrl);
 
@@ -140,7 +141,8 @@ class InboundCallController extends Controller
 			'file' => $audioContent,
 			'model' => 'whisper-1', // or whatever version is current
 		];
-	
+
+	/*	
 		try{
 			$ch = curl_init($url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -161,12 +163,43 @@ class InboundCallController extends Controller
 		}
 	
 		$decodedResponse = json_decode($response, true);
+	*/
 
-		Log::error('transcription result', [
-			'transcription' => $decodedResponse,
+		$client = new Client();
+		$apiKey = env('OPENAI_API_KEY');
+
+		$response = $client->post('https://api.openai.com/v1/audio/transcriptions', [
+			'headers' => [
+				'Authorization' => 'Bearer ' . $apiKey,
+				'Content-Type' => 'application/json',
+			],
+			'multipart' => [
+				[
+					'name'     => 'file',
+					'contents' => $audioContent,
+					'filename' => basename(parse_url($audioUrl, PHP_URL_PATH)),
+				],
+				[
+					'name'     => 'model',
+					'contents' => 'whisper-1',
+				],
+			]
 		]);
 
-		return $decodedResponse['text'];
+		// Step 3: Decode the response
+		$result = json_decode($response->getBody(), true);
+
+		if (!isset($result['text'])) {
+			Log::error('Transcription response does not contain text', [
+				'response' => $result,
+			]);
+			return 'Failed to transcribe audio';
+		}
+		else
+		{
+			return $result['text'];
+		}
+
 	}
 		
 
