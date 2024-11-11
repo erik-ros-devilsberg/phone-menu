@@ -99,25 +99,39 @@ class InboundCallController extends Controller
 	{
 		$apiKey = env('OPENAI_API_KEY');
 		$url = "https://api.openai.com/v1/audio/transcriptions";
-		
-		$audioContent = file_get_contents($audioUrl);
+
+		try {
+			$audioContent = file_get_contents($audioUrl);
+		} catch (\Exception $e) {
+			Log::error('Failed to fetch audio content', [
+				'error' => $e->getMessage(),
+			]);
+			return '';
+		}
 	
 		$data = [
 			'file' => $audioContent,
 			'model' => 'whisper-1', // or whatever version is current
 		];
 	
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, [
-			'Content-Type: multipart/form-data',
-			'Authorization: Bearer ' . $apiKey,
-		]);
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-	
-		$response = curl_exec($ch);
-		curl_close($ch);
+		try{
+			$ch = curl_init($url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, [
+				'Content-Type: multipart/form-data',
+				'Authorization: Bearer ' . $apiKey,
+			]);
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		
+			$response = curl_exec($ch);
+			curl_close($ch);
+		} catch (\Exception $e) {
+			Log::error('Failed to transcribe audio', [
+				'error' => $e->getMessage(),
+			]);
+			return '';
+		}
 	
 		$decodedResponse = json_decode($response, true);
 
