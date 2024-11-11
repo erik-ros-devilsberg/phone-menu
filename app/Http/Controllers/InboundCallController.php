@@ -228,7 +228,7 @@ class InboundCallController extends Controller
 			'json' => [
 				'model' => 'gpt-3.5-turbo',
 				'messages' => [
-					['role' => 'system', 'content' => 'You are a representative of CREW CRAFT. you are awsering the phone. Respond to the user message:'],
+					['role' => 'system', 'content' => 'You are a representative of CREW CRAFT. you are awsering the phone. The user asked a question'],
 					['role' => 'user', 'content' => $message],
 				],
 				'max_tokens' => 50,
@@ -236,10 +236,10 @@ class InboundCallController extends Controller
 			],
 		]);
 
-		return response()->json(['response' => $response->getBody()]);
+		//return response()->json(['response' => $response->getBody()]);
 
-		//$result = json_decode($response->getBody(), true);
-		//return response()->json(['response' => $result['choices'][0]['message']['content']]);
+		$result = json_decode($response->getBody(), true);
+		return response()->json(['response' => $result['choices'][0]['message']['content']]);
 
 
 	}
