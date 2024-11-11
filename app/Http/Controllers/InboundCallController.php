@@ -59,13 +59,6 @@ class InboundCallController extends Controller
 	{
 		$response = new VoiceResponse();
     
-		$response->gather([
-			'input' => 'speech',
-			'action' => '/api/chat',
-			'language' => 'en-US',
-			'speechTimeout' => 'auto'
-		]);
-
 		if ($request->has('SpeechResult')) {
 			$message = $request->input('SpeechResult');
 
@@ -79,7 +72,15 @@ class InboundCallController extends Controller
 			$response->say('I am sorry, I did not understand that. Please try again.');				
 		}
 		
-		return $response;
+		$response->gather([
+			'input' => 'speech',
+			'action' => '/api/chat',
+			'language' => 'en-US',
+			'speechTimeout' => 'auto'
+		]);
+
+		return response($response, 200)
+			->header('Content-Type', 'text/xml');
 	
 	}
 
