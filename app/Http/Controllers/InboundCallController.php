@@ -228,7 +228,7 @@ class InboundCallController extends Controller
 			'json' => [
 				'model' => 'gpt-3.5-turbo',
 				'messages' => [
-					['role' => 'system', 'content' => 'You are a representative of CREW CRAFT. you are awsering the phone.'],
+					['role' => 'system', 'content' => 'You are a representative of CREW CRAFT. you are awsering the phone. Respond to the user message:'],
 					['role' => 'user', 'content' => $message],
 				],
 				'max_tokens' => 50,
