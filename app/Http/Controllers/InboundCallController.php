@@ -236,8 +236,10 @@ class InboundCallController extends Controller
 			],
 		]);
 
-		$result = json_decode($response->getBody(), true);
-		return response()->json(['response' => $result['choices'][0]['message']['content']]);
+		return response()->json(['response' => $response->getBody()]);
+
+		//$result = json_decode($response->getBody(), true);
+		//return response()->json(['response' => $result['choices'][0]['message']['content']]);
 
 
 	}
